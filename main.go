@@ -4,6 +4,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/seagullbird/headr-common/mq"
 	"github.com/seagullbird/headr-common/mq/receive"
+	"github.com/seagullbird/headr-k8s-helper/client"
 	"os"
 )
 
@@ -32,10 +33,15 @@ func main() {
 		logger.Log("error_desc", "receive.NewReceiver failed", "error", err)
 		return
 	}
+	//	new k8s client
+	c, err := client.NewClient(logger)
+	if err != nil {
+		logger.Log("error_desc", "failed to create k8s client", "error", err)
+	}
 
-	// Register listener
-	receiver.RegisterListener("new_site_server", makeNewSiteServerListener(logger))
-
+	// Register listeners
+	receiver.RegisterListener("new_site_server", makeNewSiteServerListener(c, logger))
+	receiver.RegisterListener("del_site_server", makeDelSiteServerListener(c, logger))
 	// Run forever
 	forever := make(chan bool)
 	<-forever

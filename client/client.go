@@ -13,6 +13,7 @@ import (
 
 type Client interface {
 	CreateCaddyService(email, sitename string) error
+	DeleteCaddyService(email, sitename string) error
 }
 
 type k8sclient struct {
@@ -112,6 +113,32 @@ func (c k8sclient) CreateCaddyService(email, sitename string) error {
 		},
 	}
 	if err := c.client.Create(context.TODO(), svc); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c k8sclient) DeleteCaddyService(email, sitename string) error {
+	// delete deployment
+	name := strings.Replace(strings.Replace(email+"-"+sitename, ".", "-", 1), "@", "-", 1)
+
+	var dp appsv1.Deployment
+	if err := c.client.Get(context.TODO(), "user", name, &dp); err != nil {
+		c.logger.Log("error_desc", "failed to get deployment resource", "error", err)
+		return err
+	}
+	if err := c.client.Delete(context.TODO(), &dp); err != nil {
+		c.logger.Log("error_desc", "failed to delete deployment resource", "error", err)
+		return err
+	}
+	// delete service
+	var svc corev1.Service
+	if err := c.client.Get(context.TODO(), "user", name, &svc); err != nil {
+		c.logger.Log("error_desc", "failed to get service resource", "error", err)
+		return err
+	}
+	if err := c.client.Delete(context.TODO(), &svc); err != nil {
+		c.logger.Log("error_desc", "failed to delete service resource", "error", err)
 		return err
 	}
 	return nil
