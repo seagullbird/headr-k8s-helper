@@ -14,14 +14,7 @@ spec:
       labels:
         app: k8s-helper
     spec:
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-         claimName: data-claim
       containers:
       - name: k8s-helper
         image: k8s-helper:{{ .Commit }}
         imagePullPolicy: IfNotPresent
-        volumeMounts:
-          - mountPath: "/data"
-            name: data
