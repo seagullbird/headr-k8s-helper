@@ -19,8 +19,8 @@ func main() {
 	// mq receiver
 	var (
 		servername = mq.MQSERVERNAME
-		username = mq.MQUSERNAME
-		passwd = mq.MQSERVERPWD
+		username   = mq.MQUSERNAME
+		passwd     = mq.MQSERVERPWD
 	)
 	conn, err := mq.MakeConn(servername, username, passwd)
 	if err != nil {
