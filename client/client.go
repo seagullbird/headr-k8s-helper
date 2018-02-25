@@ -34,7 +34,7 @@ func (c k8sclient) CreateCaddyService(email, sitename string) error {
 		mountPath             = "/www"
 		image                 = "seagullbird/headr-caddy:1.0.0"
 		imagePullPolicy       = "IfNotPresent"
-		hostPath              = "/mnt/data/sites/" + email + "/" + sitename + "/public"
+		hostPath              = "/home/docker/data/sites/" + email + "/" + sitename + "/public"
 	)
 
 	dp := &appsv1.Deployment{
