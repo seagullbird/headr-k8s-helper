@@ -11,7 +11,7 @@ import (
 
 func makeNewSiteServerListener(c client.Client, logger log.Logger) receive.Listener {
 	return func(delivery amqp.Delivery) {
-		var event mq.NewSiteEvent
+		var event mq.SiteUpdatedEvent
 		err := json.Unmarshal(delivery.Body, &event)
 		if err != nil {
 			logger.Log("error_desc", "Failed to unmarshal event", "error", err, "raw-message:", delivery.Body)
@@ -29,7 +29,7 @@ func makeNewSiteServerListener(c client.Client, logger log.Logger) receive.Liste
 
 func makeDelSiteServerListener(c client.Client, logger log.Logger) receive.Listener {
 	return func(delivery amqp.Delivery) {
-		var event mq.DelSiteEvent
+		var event mq.SiteUpdatedEvent
 		err := json.Unmarshal(delivery.Body, &event)
 		if err != nil {
 			logger.Log("error_desc", "Failed to unmarshal event", "error", err, "raw-message:", delivery.Body)
