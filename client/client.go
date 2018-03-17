@@ -8,12 +8,12 @@ import (
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 	"github.com/ericchiang/k8s/util/intstr"
 	"github.com/go-kit/kit/log"
-	"strings"
+	"strconv"
 )
 
 type Client interface {
-	CreateCaddyService(email, sitename string) error
-	DeleteCaddyService(email, sitename string) error
+	CreateCaddyService(site_id uint) error
+	DeleteCaddyService(site_id uint) error
 }
 
 type k8sclient struct {
@@ -21,10 +21,11 @@ type k8sclient struct {
 	logger log.Logger
 }
 
-func (c k8sclient) CreateCaddyService(email, sitename string) error {
+func (c k8sclient) CreateCaddyService(site_id uint) error {
+	site_id_s := strconv.Itoa(int(site_id))
 	// create deployment
 	var (
-		name      = strings.Replace(strings.Replace(email+"-"+sitename, ".", "-", 1), "@", "-", 1)
+		name      = site_id_s
 		namespace = "user"
 		labels    = map[string]string{
 			"app": name,
@@ -34,7 +35,7 @@ func (c k8sclient) CreateCaddyService(email, sitename string) error {
 		mountPath             = "/www"
 		image                 = "seagullbird/headr-caddy:1.0.0"
 		imagePullPolicy       = "IfNotPresent"
-		hostPath              = "/home/docker/data/sites/" + email + "/" + sitename + "/public"
+		hostPath              = "/home/docker/data/sites/" + site_id_s + "/public"
 	)
 
 	dp := &appsv1.Deployment{
@@ -118,9 +119,9 @@ func (c k8sclient) CreateCaddyService(email, sitename string) error {
 	return nil
 }
 
-func (c k8sclient) DeleteCaddyService(email, sitename string) error {
+func (c k8sclient) DeleteCaddyService(site_id uint) error {
 	// delete deployment
-	name := strings.Replace(strings.Replace(email+"-"+sitename, ".", "-", 1), "@", "-", 1)
+	name := strconv.Itoa(int(site_id))
 
 	var dp appsv1.Deployment
 	if err := c.client.Get(context.TODO(), "user", name, &dp); err != nil {
