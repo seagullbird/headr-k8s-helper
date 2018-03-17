@@ -25,7 +25,7 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 	site_id_s := strconv.Itoa(int(site_id))
 	// create deployment
 	var (
-		name      = "siteID-" + site_id_s
+		name      = "siteid-" + site_id_s + "-service"
 		namespace = "user"
 		labels    = map[string]string{
 			"app": name,
@@ -121,7 +121,7 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 
 func (c k8sclient) DeleteCaddyService(site_id uint) error {
 	// delete deployment
-	name := "siteID-" + strconv.Itoa(int(site_id))
+	name := "siteid-" + strconv.Itoa(int(site_id)) + "-service"
 
 	var dp appsv1.Deployment
 	if err := c.client.Get(context.TODO(), "user", name, &dp); err != nil {
