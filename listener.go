@@ -20,7 +20,7 @@ func makeNewSiteServerListener(c client.Client, logger log.Logger) receive.Liste
 		logger.Log("info", "Received newsite event", "event", event)
 
 		// Create caddy service
-		err = c.CreateCaddyService(event.SiteId)
+		err = c.CreateCaddyService(event.SiteID)
 		if err != nil {
 			logger.Log("error_desc", "Failed to create caddy service", "error", err)
 		}
@@ -38,7 +38,7 @@ func makeDelSiteServerListener(c client.Client, logger log.Logger) receive.Liste
 		logger.Log("info", "Received delsite event", "event", event)
 
 		// Delete caddy service
-		err = c.DeleteCaddyService(event.SiteId)
+		err = c.DeleteCaddyService(event.SiteID)
 		if err != nil {
 			logger.Log("error_desc", "Failed to delete caddy service", "error", err)
 		}
