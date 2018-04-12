@@ -102,18 +102,11 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 
 	// create service
 	var (
-		svcType    string
+		svcType          = "NodePort"
 		svcProto         = "TCP"
 		port       int32 = 2018
 		targetPort int32 = 2015
 	)
-
-	switch config.Dev {
-	case "true":
-		svcType = "NodePort"
-	case "false":
-		svcType = "LoadBalancer"
-	}
 
 	svc := &corev1.Service{
 		Metadata: &metav1.ObjectMeta{
@@ -144,7 +137,7 @@ func (c k8sclient) DeleteCaddyService(siteID uint) error {
 	name := "siteid-" + strconv.Itoa(int(siteID)) + "-service"
 
 	var dp appsv1.Deployment
-	if err := c.client.Get(context.TODO(), "user", name, &dp); err != nil {
+	if err := c.client.Get(context.TODO(), "default", name, &dp); err != nil {
 		c.logger.Log("error_desc", "failed to get deployment resource", "error", err)
 		return err
 	}
@@ -154,7 +147,7 @@ func (c k8sclient) DeleteCaddyService(siteID uint) error {
 	}
 	// delete service
 	var svc corev1.Service
-	if err := c.client.Get(context.TODO(), "user", name, &svc); err != nil {
+	if err := c.client.Get(context.TODO(), "default", name, &svc); err != nil {
 		c.logger.Log("error_desc", "failed to get service resource", "error", err)
 		return err
 	}
