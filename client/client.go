@@ -28,7 +28,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 	// create deployment
 	var (
 		name      = "siteid-" + siteIDs + "-service"
-		namespace = "user"
+		namespace = "default"
 		labels    = map[string]string{
 			"app": name,
 		}
