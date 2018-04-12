@@ -14,6 +14,7 @@ spec:
       labels:
         app: k8s-helper
     spec:
+      serviceAccount: k8s-helper
       containers:
       - name: k8s-helper
         image: ${GCR_TAG}:${WERCKER_GIT_COMMIT}
