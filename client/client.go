@@ -12,9 +12,10 @@ import (
 	"strconv"
 )
 
+// Client represents a headr-k8s-client that is responsible for create/delete a caddy server container in the cluster.
 type Client interface {
-	CreateCaddyService(site_id uint) error
-	DeleteCaddyService(site_id uint) error
+	CreateCaddyService(siteID uint) error
+	DeleteCaddyService(siteID uint) error
 }
 
 type k8sclient struct {
@@ -22,11 +23,11 @@ type k8sclient struct {
 	logger log.Logger
 }
 
-func (c k8sclient) CreateCaddyService(site_id uint) error {
-	site_id_s := strconv.Itoa(int(site_id))
+func (c k8sclient) CreateCaddyService(siteID uint) error {
+	siteIDs := strconv.Itoa(int(siteID))
 	// create deployment
 	var (
-		name      = "siteid-" + site_id_s + "-service"
+		name      = "siteid-" + siteIDs + "-service"
 		namespace = "user"
 		labels    = map[string]string{
 			"app": name,
@@ -36,7 +37,7 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 		mountPath             = "/www"
 		image                 = "seagullbird/headr-caddy:1.0.0"
 		imagePullPolicy       = "IfNotPresent"
-		hostPath              = "/home/docker/data/sites/" + site_id_s + "/public"
+		hostPath              = "/home/docker/data/sites/" + siteIDs + "/public"
 		nfsPvcName            = "nfs"
 	)
 
@@ -127,15 +128,12 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 			},
 		},
 	}
-	if err := c.client.Create(context.TODO(), svc); err != nil {
-		return err
-	}
-	return nil
+	return c.client.Create(context.TODO(), svc)
 }
 
-func (c k8sclient) DeleteCaddyService(site_id uint) error {
+func (c k8sclient) DeleteCaddyService(siteID uint) error {
 	// delete deployment
-	name := "siteid-" + strconv.Itoa(int(site_id)) + "-service"
+	name := "siteid-" + strconv.Itoa(int(siteID)) + "-service"
 
 	var dp appsv1.Deployment
 	if err := c.client.Get(context.TODO(), "user", name, &dp); err != nil {
@@ -159,6 +157,7 @@ func (c k8sclient) DeleteCaddyService(site_id uint) error {
 	return nil
 }
 
+// NewClient returns a Client instance with given logger.
 func NewClient(logger log.Logger) (Client, error) {
 	client, err := k8s.NewInClusterClient()
 	if err != nil {
