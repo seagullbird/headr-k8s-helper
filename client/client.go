@@ -8,6 +8,7 @@ import (
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 	"github.com/ericchiang/k8s/util/intstr"
 	"github.com/go-kit/kit/log"
+	"github.com/seagullbird/headr-k8s-helper/config"
 	"strconv"
 )
 
@@ -36,7 +37,24 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 		image                 = "seagullbird/headr-caddy:1.0.0"
 		imagePullPolicy       = "IfNotPresent"
 		hostPath              = "/home/docker/data/sites/" + site_id_s + "/public"
+		nfsPvcName            = "nfs"
 	)
+
+	var volumeSource corev1.VolumeSource
+	switch config.Dev {
+	case "true":
+		volumeSource = corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: &hostPath,
+			},
+		}
+	case "false":
+		volumeSource = corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: &nfsPvcName,
+			},
+		}
+	}
 
 	dp := &appsv1.Deployment{
 		Metadata: &metav1.ObjectMeta{
@@ -55,22 +73,18 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 				},
 				Spec: &corev1.PodSpec{
 					Volumes: []*corev1.Volume{
-						&corev1.Volume{
-							Name: &volumeName,
-							VolumeSource: &corev1.VolumeSource{
-								HostPath: &corev1.HostPathVolumeSource{
-									Path: &hostPath,
-								},
-							},
+						{
+							Name:         &volumeName,
+							VolumeSource: &volumeSource,
 						},
 					},
 					Containers: []*corev1.Container{
-						&corev1.Container{
+						{
 							Name:            &name,
 							Image:           &image,
 							ImagePullPolicy: &imagePullPolicy,
 							VolumeMounts: []*corev1.VolumeMount{
-								&corev1.VolumeMount{
+								{
 									Name:      &volumeName,
 									MountPath: &mountPath,
 								},
@@ -103,7 +117,7 @@ func (c k8sclient) CreateCaddyService(site_id uint) error {
 			Selector: labels,
 			Type:     &svcType,
 			Ports: []*corev1.ServicePort{
-				&corev1.ServicePort{
+				{
 					Protocol: &svcProto,
 					Port:     &port,
 					TargetPort: &intstr.IntOrString{
