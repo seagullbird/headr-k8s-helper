@@ -102,11 +102,18 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 
 	// create service
 	var (
-		svcType          = "NodePort"
+		svcType    string
 		svcProto         = "TCP"
 		port       int32 = 2018
 		targetPort int32 = 2015
 	)
+
+	switch config.Dev {
+	case "true":
+		svcType = "NodePort"
+	case "false":
+		svcType = "LoadBalancer"
+	}
 
 	svc := &corev1.Service{
 		Metadata: &metav1.ObjectMeta{
@@ -128,6 +135,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 			},
 		},
 	}
+	c.logger.Log("svc", svc.String())
 	return c.client.Create(context.TODO(), svc)
 }
 
