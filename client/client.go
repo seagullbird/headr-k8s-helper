@@ -219,6 +219,9 @@ func (c k8sclient) DeleteCaddyService(siteID uint) error {
 	if found {
 		ing.Spec.Rules[0].IngressRuleValue.Http.Paths[index] = ing.Spec.Rules[0].IngressRuleValue.Http.Paths[len(ing.Spec.Rules[0].IngressRuleValue.Http.Paths)-1]
 		ing.Spec.Rules[0].IngressRuleValue.Http.Paths = ing.Spec.Rules[0].IngressRuleValue.Http.Paths[:len(ing.Spec.Rules[0].IngressRuleValue.Http.Paths)-1]
+		if len(ing.Spec.Rules[0].IngressRuleValue.Http.Paths) == 0 {
+			ing.Spec.Rules[0].IngressRuleValue.Http = nil
+		}
 		if err := c.client.Update(context.TODO(), &ing); err != nil {
 			return err
 		}
