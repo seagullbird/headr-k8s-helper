@@ -36,9 +36,9 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		replicas        int32 = 1
 		volumeName            = "data"
 		mountPath             = "/www"
+		serverRootPath 		  = ""
 		image                 = "abiosoft/caddy:0.10.12"
 		imagePullPolicy       = "IfNotPresent"
-		command               = []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", filepath.Join(mountPath, "sites", siteIDs, "public"), "--log", "stdout"}
 		hostPath              = "/home/docker/data/sites/" + siteIDs + "/public"
 		nfsPvcName            = "nfs"
 	)
@@ -51,13 +51,17 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 				Path: &hostPath,
 			},
 		}
+		serverRootPath = mountPath
 	case "false":
 		volumeSource = corev1.VolumeSource{
 			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
 				ClaimName: &nfsPvcName,
 			},
 		}
+		serverRootPath = filepath.Join(mountPath, "sites", siteIDs, "public")
 	}
+
+	              := []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", serverRootPath, "--log", "stdout"}
 
 	dp := &appsv1.Deployment{
 		Metadata: &metav1.ObjectMeta{
