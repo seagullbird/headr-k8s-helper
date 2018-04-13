@@ -65,7 +65,8 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 	command := []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", serverRootPath, "--log", "stdout"}
 
 	env_name := "SITENAME"
-	env := corev1.EnvVar{Name: &env_name, Value: &siteIDstr}
+	env_val := "/" + siteIDstr
+	env := corev1.EnvVar{Name: &env_name, Value: &env_val}
 
 	dp := &appsv1.Deployment{
 		Metadata: &metav1.ObjectMeta{
@@ -165,6 +166,9 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		Backend: &backend,
 	}
 	ing.Spec.Rules[0].IngressRuleValue.Http.Paths = append(ing.Spec.Rules[0].IngressRuleValue.Http.Paths, &newHTTPPath)
+	for _, v := range ing.Spec.Rules[0].IngressRuleValue.Http.Paths {
+		c.logger.Log(v.String())
+	}
 	return c.client.Update(context.TODO(), &ing)
 }
 
