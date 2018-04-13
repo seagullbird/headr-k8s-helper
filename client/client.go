@@ -165,10 +165,11 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		Path:    &backendPath,
 		Backend: &backend,
 	}
-	ing.Spec.Rules[0].IngressRuleValue.Http.Paths = append(ing.Spec.Rules[0].IngressRuleValue.Http.Paths, &newHTTPPath)
-	for _, v := range ing.Spec.Rules[0].IngressRuleValue.Http.Paths {
-		c.logger.Log(v.String())
+	if ing.Spec.Rules[0].IngressRuleValue.Http == nil {
+		ing.Spec.Rules[0].IngressRuleValue.Http = &extensionsv1beta1.HTTPIngressRuleValue{}
+		ing.Spec.Rules[0].IngressRuleValue.Http.Paths = []*extensionsv1beta1.HTTPIngressPath{}
 	}
+	ing.Spec.Rules[0].IngressRuleValue.Http.Paths = append(ing.Spec.Rules[0].IngressRuleValue.Http.Paths, &newHTTPPath)
 	return c.client.Update(context.TODO(), &ing)
 }
 
