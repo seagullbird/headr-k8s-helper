@@ -36,7 +36,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		replicas        int32 = 1
 		volumeName            = "data"
 		mountPath             = "/www"
-		serverRootPath 		  = ""
+		serverRootPath        = ""
 		image                 = "abiosoft/caddy:0.10.12"
 		imagePullPolicy       = "IfNotPresent"
 		hostPath              = "/home/docker/data/sites/" + siteIDs + "/public"
@@ -61,7 +61,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		serverRootPath = filepath.Join(mountPath, "sites", siteIDs, "public")
 	}
 
-	              := []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", serverRootPath, "--log", "stdout"}
+	command := []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", serverRootPath, "--log", "stdout"}
 
 	dp := &appsv1.Deployment{
 		Metadata: &metav1.ObjectMeta{
