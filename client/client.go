@@ -9,6 +9,7 @@ import (
 	"github.com/ericchiang/k8s/util/intstr"
 	"github.com/go-kit/kit/log"
 	"github.com/seagullbird/headr-k8s-helper/config"
+	"path/filepath"
 	"strconv"
 )
 
@@ -35,8 +36,9 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		replicas        int32 = 1
 		volumeName            = "data"
 		mountPath             = "/www"
-		image                 = "seagullbird/headr-caddy:1.0.0"
+		image                 = "abiosoft/caddy:0.10.12"
 		imagePullPolicy       = "IfNotPresent"
+		command               = []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", filepath.Join(mountPath, "sites", siteIDs, "public"), "--log", "stdout"}
 		hostPath              = "/home/docker/data/sites/" + siteIDs + "/public"
 		nfsPvcName            = "nfs"
 	)
@@ -83,6 +85,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 						{
 							Name:            &name,
 							Image:           &image,
+							Command:         command,
 							ImagePullPolicy: &imagePullPolicy,
 							VolumeMounts: []*corev1.VolumeMount{
 								{
