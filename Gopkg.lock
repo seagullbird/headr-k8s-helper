@@ -3,7 +3,7 @@
 
 [[projects]]
   name = "github.com/ericchiang/k8s"
-  packages = [".","apis/apiextensions/v1beta1","apis/apps/v1","apis/core/v1","apis/meta/v1","apis/policy/v1beta1","apis/resource","runtime","runtime/schema","util/intstr","watch/versioned"]
+  packages = [".","apis/apiextensions/v1beta1","apis/apps/v1","apis/core/v1","apis/extensions/v1beta1","apis/meta/v1","apis/policy/v1beta1","apis/resource","runtime","runtime/schema","util/intstr","watch/versioned"]
   revision = "5912993f00cb7c971aaa54529a06bd3eecd6c3d4"
   version = "v1.0.0"
 
@@ -64,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "96dbda29138fa584e882f05f1adb3fb41cbc220a74fc32be02bc4c73dbfd2db3"
+  inputs-digest = "9be6f13d7f031b5f72521992014055f14fd994fcd725f9405c94c95f64c131f5"
   solver-name = "gps-cdcl"
   solver-version = 1

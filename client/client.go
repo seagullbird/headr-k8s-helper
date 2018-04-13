@@ -5,6 +5,7 @@ import (
 	"github.com/ericchiang/k8s"
 	appsv1 "github.com/ericchiang/k8s/apis/apps/v1"
 	corev1 "github.com/ericchiang/k8s/apis/core/v1"
+	extensionsv1beta1 "github.com/ericchiang/k8s/apis/extensions/v1beta1"
 	metav1 "github.com/ericchiang/k8s/apis/meta/v1"
 	"github.com/ericchiang/k8s/util/intstr"
 	"github.com/go-kit/kit/log"
@@ -25,10 +26,10 @@ type k8sclient struct {
 }
 
 func (c k8sclient) CreateCaddyService(siteID uint) error {
-	siteIDs := strconv.Itoa(int(siteID))
+	siteIDstr := strconv.Itoa(int(siteID))
 	// create deployment
 	var (
-		name      = "siteid-" + siteIDs + "-service"
+		name      = "siteid-" + siteIDstr + "-service"
 		namespace = "default"
 		labels    = map[string]string{
 			"app": name,
@@ -37,9 +38,9 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		volumeName            = "data"
 		mountPath             = "/www"
 		serverRootPath        = ""
-		image                 = "abiosoft/caddy:0.10.12"
+		image                 = "seagullbird/headr-caddy:2.0.0"
 		imagePullPolicy       = "IfNotPresent"
-		hostPath              = "/home/docker/data/sites/" + siteIDs + "/public"
+		hostPath              = "/home/docker/data/sites/" + siteIDstr + "/public"
 		nfsPvcName            = "nfs"
 	)
 
@@ -58,10 +59,13 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 				ClaimName: &nfsPvcName,
 			},
 		}
-		serverRootPath = filepath.Join(mountPath, "sites", siteIDs, "public")
+		serverRootPath = filepath.Join(mountPath, "sites", siteIDstr, "public")
 	}
 
 	command := []string{"/bin/parent", "caddy", "--conf", "/etc/Caddyfile", "-root", serverRootPath, "--log", "stdout"}
+
+	env_name := "SITENAME"
+	env := corev1.EnvVar{Name: &env_name, Value: &siteIDstr}
 
 	dp := &appsv1.Deployment{
 		Metadata: &metav1.ObjectMeta{
@@ -90,6 +94,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 							Name:            &name,
 							Image:           &image,
 							Command:         command,
+							Env:             []*corev1.EnvVar{&env},
 							ImagePullPolicy: &imagePullPolicy,
 							VolumeMounts: []*corev1.VolumeMount{
 								{
@@ -135,8 +140,32 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 			},
 		},
 	}
-	c.logger.Log("svc", svc.String())
-	return c.client.Create(context.TODO(), svc)
+	if err := c.client.Create(context.TODO(), svc); err != nil {
+		return err
+	}
+
+	if config.Dev == "true" {
+		return nil
+	}
+
+	// Add usersites-ingress entry
+	var ing extensionsv1beta1.Ingress
+	if err := c.client.Get(context.TODO(), "default", "usersites-ingress", &ing); err != nil {
+		return err
+	}
+	backendPath := "/" + siteIDstr
+	backend := extensionsv1beta1.IngressBackend{
+		ServiceName: &name,
+		ServicePort: &intstr.IntOrString{
+			IntVal: &port,
+		},
+	}
+	newHTTPPath := extensionsv1beta1.HTTPIngressPath{
+		Path:    &backendPath,
+		Backend: &backend,
+	}
+	ing.Spec.Rules[0].IngressRuleValue.Http.Paths = append(ing.Spec.Rules[0].IngressRuleValue.Http.Paths, &newHTTPPath)
+	return c.client.Update(context.TODO(), &ing)
 }
 
 func (c k8sclient) DeleteCaddyService(siteID uint) error {
@@ -161,6 +190,33 @@ func (c k8sclient) DeleteCaddyService(siteID uint) error {
 	if err := c.client.Delete(context.TODO(), &svc); err != nil {
 		c.logger.Log("error_desc", "failed to delete service resource", "error", err)
 		return err
+	}
+
+	if config.Dev == "true" {
+		return nil
+	}
+
+	// delete usersites-ingress entry
+	var ing extensionsv1beta1.Ingress
+	if err := c.client.Get(context.TODO(), "default", "usersites-ingress", &ing); err != nil {
+		c.logger.Log("error_desc", "failed to get usersites-ingress resource", "error", err)
+		return err
+	}
+
+	index := 0
+	found := false
+	for i, v := range ing.Spec.Rules[0].IngressRuleValue.Http.Paths {
+		if *v.Backend.ServiceName == name {
+			found = true
+			index = i
+		}
+	}
+	if found {
+		ing.Spec.Rules[0].IngressRuleValue.Http.Paths[index] = ing.Spec.Rules[0].IngressRuleValue.Http.Paths[len(ing.Spec.Rules[0].IngressRuleValue.Http.Paths)-1]
+		ing.Spec.Rules[0].IngressRuleValue.Http.Paths = ing.Spec.Rules[0].IngressRuleValue.Http.Paths[:len(ing.Spec.Rules[0].IngressRuleValue.Http.Paths)-1]
+		if err := c.client.Update(context.TODO(), &ing); err != nil {
+			return err
+		}
 	}
 	return nil
 }
