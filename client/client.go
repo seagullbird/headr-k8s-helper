@@ -39,7 +39,7 @@ func (c k8sclient) CreateCaddyService(siteID uint) error {
 		mountPath             = "/www"
 		serverRootPath        = ""
 		image                 = "seagullbird/headr-caddy:2.0.0"
-		imagePullPolicy       = "IfNotPresent"
+		imagePullPolicy       = "Always"
 		hostPath              = "/home/docker/data/sites/" + siteIDstr + "/public"
 		nfsPvcName            = "nfs"
 	)
